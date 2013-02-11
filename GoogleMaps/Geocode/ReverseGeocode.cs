@@ -46,19 +46,23 @@ namespace GoogleMaps.Geocode {
 			var requestUri =
 				new Uri("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + lng +
 				        "&sensor=" + hasSensor.ToString().ToLower());
-			var wr = WebRequest.CreateHttp(requestUri);
-			wr.Headers["Accept-Language"] = language;
-			wr.BeginGetResponse(WebRequestReady, wr);
+			try {
+				var wr = WebRequest.CreateHttp(requestUri);
+				wr.Headers["Accept-Language"] = language;
+				wr.BeginGetResponse(WebRequestReady, wr);
+			} catch (WebException) {}
 		}
 		private void WebRequestReady(IAsyncResult asyncResult) {
-			var request = (HttpWebRequest)asyncResult.AsyncState;
-			var response = request.EndGetResponse(asyncResult);
-			var serializer = new DataContractJsonSerializer(typeof(ReverseGeocodeResults));
-			var results = (ReverseGeocodeResults)serializer.ReadObject(response.GetResponseStream());
-			Results = results.results;
-			if (null != Updated) {
-				Updated.Invoke(this, null);
-			}
+			try {
+				var request = (HttpWebRequest)asyncResult.AsyncState;
+				var response = request.EndGetResponse(asyncResult);
+				var serializer = new DataContractJsonSerializer(typeof (ReverseGeocodeResults));
+				var results = (ReverseGeocodeResults)serializer.ReadObject(response.GetResponseStream());
+				Results = results.results;
+				if (null != Updated) {
+					Updated.Invoke(this, null);
+				}
+			} catch (WebException) { }
 		}
 	}
 }
